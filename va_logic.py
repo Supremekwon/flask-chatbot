@@ -5,6 +5,7 @@ from pathlib import Path
 from datetime import datetime
 import random
 
+openai.api_key = os.environ.get("OPENAI_API_KEY")
 
 def get_prompt_list() -> list[str]:
     return [
@@ -61,5 +62,6 @@ def get_bot_response(message: str, pl: list[str]) -> str:
         bot_response = 'Something went wrong...'
 
     return bot_response
+
 
 
