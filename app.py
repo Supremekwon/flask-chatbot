@@ -4,6 +4,8 @@ from flask import Flask, render_template, request, jsonify, redirect, session, u
 from urllib.parse import urlencode
 from va_logic import get_bot_response, get_prompt_list
 
+openai.api_key = os.environ.get("OPENAI_API_KEY")
+
 prompt_list = get_prompt_list()
 
 app = Flask(__name__)
@@ -37,3 +39,4 @@ def message():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
