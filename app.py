@@ -1,6 +1,6 @@
 import os
 import requests
-import openai 
+from openai import OpenAI
 from flask import Flask, render_template, request, jsonify, redirect, session, url_for
 from urllib.parse import urlencode
 from va_logic import get_bot_response, get_prompt_list
@@ -40,6 +40,7 @@ def message():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
 
 
 
