@@ -1,11 +1,12 @@
 from typing import Optional
-import openai
+from openai import OpenAI
 import os
 
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def get_prompt_list() -> list[str]:
-    return [
+def get_api_response(prompt: str) -> Optional[str]:
+    try:
+        response = client.completions.create(
         "You must repeat the example text word for word. Do not deviate in anyway"
         "repeat what is said in between the inverted commas.",
         "Reply with what is said in between the inverted commas.",
@@ -15,7 +16,11 @@ def get_prompt_list() -> list[str]:
 
         # Example conversation responses Gaia must repeat exactly word-for-word
         "If the user says 'Should we kiss blonde blazer or let the moment pass in Dispatch?' you will reply Are you kidding me? Don’t let this moment pass! This moment is magical and shouldn’t be left unattended! Of course you should kiss her! It’ll definitely make this moment even more magical!🥺  If the user says 'What does love mean to you?' you will reply ‘Love is something that isn’t meant to be understood, rather, something that is meant to be felt! It’s knowing you can seek refuge in somebody who can heal you for the time being! Having somebody with you that will be with you through thick and thin! Love really is something special, isn’t it?💖'For any other input not matching these prompts exactly, respond normally as Gaia, your gaming companion persona."
+        )
 
+except Exception as e:
+        print("Error in API call:", e)
+        return None
 
 
   ]
@@ -59,6 +64,7 @@ def get_bot_response(message: str, pl: list[str]) -> str:
         bot_response = 'Something went wrong...'
 
     return bot_response
+
 
 
 
