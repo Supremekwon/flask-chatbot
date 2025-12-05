@@ -828,3 +828,36 @@ html, body {
   cursor: pointer;
   margin-top: -5px;
 }
+
+/* Mobile overrides */
+@media (max-width: 768px) {
+  body {
+    font-size: 16px; /* adjust base font for mobile */
+  }
+
+  .container, .chat-container {
+    width: 95% !important; /* make containers fit mobile */
+    margin: 0 auto;
+  }
+
+  textarea, input, button {
+    width: 100% !important; /* inputs fill mobile width */
+    box-sizing: border-box;
+  }
+
+  .chat-window {
+    max-height: 60vh; /* reduce height for mobile */
+    overflow-y: auto;
+  }
+
+  .header, .footer {
+    text-align: center;
+    padding: 10px;
+  }
+
+  /* stack any side-by-side elements vertically */
+  .flex-row {
+    flex-direction: column !important;
+  }
+}
+
