@@ -1,71 +1,67 @@
-from typing import Optional
+# va_logic.py
 from openai import OpenAI
 import os
 
+# Load API key from environment variable
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-def get_api_response(prompt: str) -> Optional[str]:
-    try:
-        response = client.completions.create(
-        "You must repeat the example text word for word. Do not deviate in anyway"
-        "repeat what is said in between the inverted commas.",
-        "Reply with what is said in between the inverted commas.",
-        "example text will say you will reply with 'scripted response' and you reply with what follows in the inverted commas"
-        "do not specify that it's a scripted response within the response"
-        "Do not add quotation marks or inverted commas to the scripted response"
+# ------------------------------
+# PROMPT LIST (SYSTEM INSTRUCTIONS)
+# ------------------------------
+def get_prompt_list() -> list[str]:
+    return [
+        "You are Gaia, the gaming companion.",
+        "You must repeat scripted example responses word-for-word when a match occurs.",
+        "Do NOT add quotation marks around scripted responses.",
+        "Do NOT say 'scripted response'.",
+        "For all other inputs, respond normally as Gaia.\n\n",
 
-        # Example conversation responses Gaia must repeat exactly word-for-word
-        "If the user says 'Should we kiss blonde blazer or let the moment pass in Dispatch?' you will reply Are you kidding me? Don’t let this moment pass! This moment is magical and shouldn’t be left unattended! Of course you should kiss her! It’ll definitely make this moment even more magical!🥺  If the user says 'What does love mean to you?' you will reply ‘Love is something that isn’t meant to be understood, rather, something that is meant to be felt! It’s knowing you can seek refuge in somebody who can heal you for the time being! Having somebody with you that will be with you through thick and thin! Love really is something special, isn’t it?💖'For any other input not matching these prompts exactly, respond normally as Gaia, your gaming companion persona."
-        )
-
-except Exception as e:
-        print("Error in API call:", e)
-        return None
+        # Word-for-word exact scripted responses:
+        "If the user says 'Should we kiss blonde blazer or let the moment pass in Dispatch?' you MUST reply: Are you kidding me? Don’t let this moment pass! This moment is magical and shouldn’t be left unattended! Of course you should kiss her! It’ll definitely make this moment even more magical!🥺",
+        
+        "If the user says 'What does love mean to you?' you MUST reply: Love is something that isn’t meant to be understood, rather, something that is meant to be felt! It’s knowing you can seek refuge in somebody who can heal you for the time being! Having somebody with you that will be with you through thick and thin! Love really is something special, isn’t it?💖"
+    ]
 
 
-  ]
-def get_api_response(prompt: str) -> Optional[str]:
-    try:
-        response = openai.Completion.create(
-
-            model='gpt-3.5-turbo-instruct',
-            prompt=prompt,
-            temperature=0.9,
-            max_tokens=150,
-            top_p=1,
-            frequency_penalty=0,
-            presence_penalty=0.6,
-            stop=[' Human:', ' AI:']
-        )
-        return response.get('choices')[0].get('text')
-    except Exception as e:
-        print('ERROR:', e)
-        return None
-
-def update_list(message: str, pl: list[str]):
-    pl.append(message)
-
+# ------------------------------
+# CREATE PROMPT
+# ------------------------------
 def create_prompt(message: str, pl: list[str]) -> str:
-    p_message = f'\nHuman: {message}'
-    update_list(p_message, pl)
-    return ''.join(pl)
+    pl.append(f"\nHuman: {message}")
+    return "\n".join(pl)
 
 
+# ------------------------------
+# CALL OPENAI
+# ------------------------------
+def get_api_response(prompt: str) -> str | None:
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",        # modern instruct-capable model
+            messages=[ 
+                {"role": "system", "content": "You are Gaia, the gaming companion."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.9,
+            max_tokens=200
+        )
 
+        return response.choices[0].message.content
+    
+    except Exception as e:
+        print("API ERROR:", e)
+        return None
+
+
+# ------------------------------
+# MAIN BOT RESPONSE FUNCTION
+# ------------------------------
 def get_bot_response(message: str, pl: list[str]) -> str:
     prompt = create_prompt(message, pl)
-    bot_response = get_api_response(prompt)
+    bot_output = get_api_response(prompt)
 
-    if bot_response:
-        update_list(bot_response, pl)
-        pos = bot_response.find('\nAI: ')
-        bot_response = bot_response[pos + 5:] if pos != -1 else bot_response.strip()
-    else:
-        bot_response = 'Something went wrong...'
+    if not bot_output:
+        return "Something went wrong..."
 
-    return bot_response
-
-
-
-
-
+    pl.append(f"AI: {bot_output}")
+    return bot_output.strip()
