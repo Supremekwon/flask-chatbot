@@ -2,14 +2,12 @@ from typing import Optional, List
 from openai import OpenAI
 import os
 
-# Create OpenAI client using environment variable from Render
+# Create OpenAI client using environment variable
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-
 # --------------------------
-# 1. PROMPT LIST
+# 1. PROMPT LIST / GAIA PERSONALITY
 # --------------------------
-
 def get_prompt_list() -> List[str]:
     return [
         # System rules for Gaia's behavior
@@ -56,51 +54,54 @@ def get_prompt_list() -> List[str]:
         # Start transcript
         "Conversation begins below:\nAI: Hello! I'm Gaia! What’s on your mind today?💚\n"
     ]
-# --------------------------
-# 2. Build prompt history
-# --------------------------
-def update_list(new_message: str, pl: List[str]):
-    pl.append(new_message + "\n")
-
-
-def create_prompt(user_message: str, pl: List[str]) -> str:
-    update_list(f"Human: {user_message}", pl)
-    return "".join(pl)
-
 
 # --------------------------
-# 3. API call (using new client.completions.create)
+# 2. Conversation history
 # --------------------------
-def get_api_response(prompt: str) -> Optional[str]:
+conversation_history: List[dict] = [
+    {"role": "system", "content": "".join(get_prompt_list())}
+]
+
+# --------------------------
+# 3. API call using chat format
+# --------------------------
+def get_api_response(user_message: str) -> Optional[str]:
     try:
-        response = client.completions.create(
+        # Append user message as a new turn
+        conversation_history.append({"role": "user", "content": user_message})
+
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
-            prompt=prompt,
+            messages=conversation_history,
             max_tokens=150,
             temperature=0.9
         )
 
-        return response.choices[0].text.strip()
+        bot_reply = response.choices[0].message['content'].strip()
+
+        # Append AI reply to history for context
+        conversation_history.append({"role": "assistant", "content": bot_reply})
+
+        return bot_reply
 
     except Exception as e:
         print("API ERROR:", e)
         return None
 
-
 # --------------------------
-# 4. Main response logic
+# 4. Main bot response function
 # --------------------------
-def get_bot_response(message: str, pl: List[str]) -> str:
-    prompt = create_prompt(message, pl)
-    bot_reply = get_api_response(prompt)
-
+def get_bot_response(user_message: str) -> str:
+    bot_reply = get_api_response(user_message)
     if not bot_reply:
         return "Something went wrong..."
-
-    update_list(f"AI: {bot_reply}", pl)
-
-    # Clean leading "AI:" if model adds it
-    if bot_reply.startswith("AI:"):
-        bot_reply = bot_reply[3:].strip()
-
     return bot_reply
+
+# --------------------------
+# 5. Example usage
+# --------------------------
+if __name__ == "__main__":
+    while True:
+        user_input = input("You: ")
+        reply = get_bot_response(user_input)
+        print(f"Gaia: {reply}")
