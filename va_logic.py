@@ -54,7 +54,7 @@ def create_prompt(user_message: str, pl: List[str]) -> str:
 def get_api_response(prompt: str) -> Optional[str]:
     try:
         response = client.completions.create(
-            model="gpt-3.5-turbo-instruct",
+            model="gpt-5-mini",
             prompt=prompt,
             max_tokens=150,
             temperature=0.9
